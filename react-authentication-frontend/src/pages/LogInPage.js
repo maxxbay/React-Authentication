@@ -1,16 +1,52 @@
 import { useHistory } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useToken } from "../auth/useToken";
+import { useQueryParams } from "../util/useQueryParams";
+
+import axios from "axios";
 
 export const LogInPage = () => {
+  // eslint-disable-next-line no-unused-vars
+  const [token, setToken] = useToken();
+
+  // eslint-disable-next-line no-unused-vars
   const [errorMessage, setErrorMessage] = useState("");
 
   const [emailValue, setEmailValue] = useState("");
   const [passwordValue, setPasswordValue] = useState("");
 
-  const history = useHistory();
+  const [googleOathUrl, setGoogleOathUrl] = useState("");
+  const { token: oauthToken } = useQueryParams();
 
+  const history = useHistory();
+  useEffect(() => {
+    if (oauthToken) {
+      setToken(oauthToken);
+      history.push("/");
+    }
+  }, [oauthToken, setToken, history]);
+
+  useEffect(() => {
+    const loadOauthUrl = async () => {
+      try {
+        const response = await axios.get("/auth/google/url");
+        const { url } = response.data;
+        setGoogleOathUrl(url);
+      } catch (e) {
+        console.log(e);
+      }
+    };
+
+    loadOauthUrl();
+  }, []);
   const onLogInClicked = async () => {
-    alert("Log in not implemented yet");
+    const response = await axios.post("/api/login", {
+      email: emailValue,
+      password: passwordValue,
+    });
+    const { token } = response.data;
+    setToken(token);
+    history.push("/");
   };
 
   return (
@@ -37,6 +73,14 @@ export const LogInPage = () => {
       </button>
       <button onClick={() => history.push("/signup")}>
         Don't have an account? Sign Up
+      </button>
+      <button
+        disabled={!googleOathUrl}
+        onClick={() => {
+          window.location.href = googleOathUrl;
+        }}
+      >
+        Log In with Google
       </button>
     </div>
   );

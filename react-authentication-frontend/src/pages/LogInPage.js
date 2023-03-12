@@ -9,7 +9,6 @@ export const LogInPage = () => {
   // eslint-disable-next-line no-unused-vars
   const [token, setToken] = useToken();
 
-  // eslint-disable-next-line no-unused-vars
   const [errorMessage, setErrorMessage] = useState("");
 
   const [emailValue, setEmailValue] = useState("");
@@ -40,13 +39,17 @@ export const LogInPage = () => {
     loadOauthUrl();
   }, []);
   const onLogInClicked = async () => {
-    const response = await axios.post("/api/login", {
-      email: emailValue,
-      password: passwordValue,
-    });
-    const { token } = response.data;
-    setToken(token);
-    history.push("/");
+    try {
+      const response = await axios.post("/api/login", {
+        email: emailValue,
+        password: passwordValue,
+      });
+      const { token } = response.data;
+      setToken(token);
+      history.push("/");
+    } catch (e) {
+      setErrorMessage(e.message);
+    }
   };
 
   return (
